@@ -83,8 +83,8 @@ moving migration to a dedicated step is a roadmap item.
 - **.NET 10**, **Aspire 13.x**, **EF Core 10**, **PostgreSQL** (Npgsql).
 - **MediatR pinned to `12.5.0`** — v13+ is commercially licensed; 12.x is free with the same API.
 - **No FluentAssertions** (v8 is commercial). Use xUnit `Assert`; Shouldly is an OK free upgrade.
-- Central Package Management (CPM) is intentionally **deferred** — versions live in each `.csproj`
-  for now (revisit when the dependency set stabilises).
+- **Central Package Management (CPM) is enabled** — every package version lives in the root
+  `Directory.Packages.props`; each `.csproj` references packages by name only (no inline `Version`).
 
 ## MCP tools
 
