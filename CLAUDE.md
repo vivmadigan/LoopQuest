@@ -95,6 +95,29 @@ React/JS docs later; Chrome DevTools + Playwright for frontend; GitHub for repo/
 against Microsoft Learn** rather than relying on memory. Never update dependencies or modify
 external systems (GitHub, etc.) without explicit approval.
 
+## Git workflow
+
+Three-tier branching:
+
+- **`main`** — stable, always-green. Only receives merges from `dev` at milestones (e.g. a completed
+  stage or release). Don't commit directly to `main`.
+- **`dev`** — the integration branch and default home base. Feature branches merge here.
+- **`feature/*`** — one short-lived branch per piece of work, branched off `dev`. Naming:
+  `feature/stage-<n>-<slug>`, e.g. `feature/stage-1-challenge-calculator`. Merge back to `dev` when
+  the change builds, tests pass, and it's reviewed.
+
+```bash
+# Start a feature (from dev)
+git switch dev && git switch -c feature/stage-1-challenge-calculator
+# ... work, commit ...
+git switch dev && git merge --no-ff feature/stage-1-challenge-calculator
+# At a milestone, promote dev to main
+git switch main && git merge --no-ff dev
+```
+
+Trivial docs/config tweaks may go straight to `dev`. There's no GitHub remote yet — when we add one,
+feature branches become pull requests into `dev`.
+
 ## Definition of done for a change
 
 1. It builds (`dotnet build`) with no new errors.
