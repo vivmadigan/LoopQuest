@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LoopQuest.Api/LoopQuest.Api.csproj" />
+    <Project Path="src/LoopQuest.AppHost/LoopQuest.AppHost.csproj" />
+    <Project Path="src/LoopQuest.Application/LoopQuest.Application.csproj" />
+    <Project Path="src/LoopQuest.Domain/LoopQuest.Domain.csproj" />
+    <Project Path="src/LoopQuest.Infrastructure/LoopQuest.Infrastructure.csproj" />
+    <Project Path="src/LoopQuest.ServiceDefaults/LoopQuest.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LoopQuest.Api.IntegrationTests/LoopQuest.Api.IntegrationTests.csproj" />
+    <Project Path="tests/LoopQuest.Domain.Tests/LoopQuest.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,69 @@
+## .NET / Visual Studio / Rider gitignore
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+build/
+bld/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# .NET artifacts
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.user
+*.suo
+*.userprefs
+
+# Visual Studio / VS Code / Rider
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+.idea/
+*.swp
+
+# Rider / ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# Test results / coverage
+[Tt]est[Rr]esult*/
+TestResults/
+coverage*.json
+coverage*.xml
+coverage*.cobertura.xml
+*.coverage
+*.coveragexml
+
+# User-specific / secrets (never commit these)
+appsettings.*.local.json
+*.local.json
+secrets.json
+.env
+.env.local
+
+# Aspire / containers
+**/aspire-output/
+*.aspire/
+
+# Node (for the React frontend, added later)
+node_modules/
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS noise
+.DS_Store
+Thumbs.db

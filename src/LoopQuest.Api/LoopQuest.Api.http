@@ -1,0 +1,6 @@
+@LoopQuest.Api_HostAddress = http://localhost:5159
+
+GET {{LoopQuest.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

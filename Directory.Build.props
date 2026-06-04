@@ -1,0 +1,36 @@
+<Project>
+
+  <!--
+    Solution-wide MSBuild properties.
+
+    Every .csproj under this folder automatically imports this file, so common
+    settings live here instead of being repeated in each project. This is the
+    standard .NET way to keep build configuration DRY.
+
+    See docs/01-architecture.md for why these are set the way they are.
+  -->
+
+  <PropertyGroup>
+    <!-- Language / compiler -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Treat code-style (.editorconfig) violations as build warnings/errors,
+         so formatting stays consistent without relying on the IDE. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Keep the build green while learning: warnings are surfaced but do not
+         fail the build. Flip this to true once the codebase is warning-clean. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- Richer analyzer coverage. 'latest-recommended' is a sensible balance;
+         'latest-all' is stricter if you want to push yourself. -->
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+
+    <!-- Reproducible builds -->
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>
