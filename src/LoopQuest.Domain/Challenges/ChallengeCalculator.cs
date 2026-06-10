@@ -1,5 +1,3 @@
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace LoopQuest.Domain.Challenges;
 
 /// <summary>
@@ -61,27 +59,17 @@ public static class ChallengeCalculator
     /// Computes the full progress/completion result for a challenge.
     /// </summary>
     /// <remarks>
-    /// ╔══════════════════════════════════════════════════════════════════════════════╗
-    /// ║  YOUR FIRST EXERCISE (Stage 1 in docs/03-roadmap.md).                          ║
-    /// ║                                                                                ║
-    /// ║  The skipped tests in tests/LoopQuest.Domain.Tests/ChallengeCalculatorTests.cs ║
-    /// ║  describe the exact behaviour. Remove the Skip on each test and make them pass.║
-    /// ╚══════════════════════════════════════════════════════════════════════════════╝
+    /// The authoritative behaviour spec is the test suite (ChallengeCalculatorTests) and
+    /// docs/02-domain-model.md ("Elevation substitution") — when in doubt, those win.
     ///
-    /// Algorithm (all values in meters):
-    ///
-    ///   surplusDistance      = max(0, achievedDistance - targetDistance)
-    ///   elevationAffordable  = surplusDistance / SubstitutionRateMetersPerMeter
-    ///   maxBuyableElevation  = targetElevation * MaxBuyableFraction
-    ///   elevationPurchased   = min(elevationAffordable, maxBuyableElevation)
-    ///   effectiveElevation   = achievedElevation + elevationPurchased
-    ///
-    ///   distanceComplete     = achievedDistance  >= targetDistance
-    ///   elevationComplete    = effectiveElevation >= targetElevation
-    ///   challengeComplete    = distanceComplete AND elevationComplete
-    ///
-    /// Note: surplus distance is *spent* on elevation but is never deducted from the distance
-    /// bar — only the overflow above the target is used, so the distance requirement stays met.
+    /// Two nuances worth knowing when reading the code:
+    /// <list type="bullet">
+    /// <item>Only the overflow <i>above</i> the distance target converts to elevation; spent surplus
+    /// is never deducted, so buying elevation can never un-complete the distance bar.</item>
+    /// <item>Substitution is one-directional — distance buys elevation, never the reverse. That is
+    /// why <see cref="ChallengeProgress.DistanceComplete"/> checks <i>achieved</i> distance while
+    /// <see cref="ChallengeProgress.ElevationComplete"/> checks <i>effective</i> elevation.</item>
+    /// </list>
     /// </remarks>
     public static ChallengeProgress Calculate(ChallengeProgressInput input)
     {
@@ -102,8 +90,6 @@ public static class ChallengeCalculator
             EffectiveElevationMeters: effectiveElevation,
             DistanceComplete: distanceComplete,
             ElevationComplete: elevationComplete,
-            ChallengeComplete: challengeComplete
-            );
-
+            ChallengeComplete: challengeComplete);
     }
 }
