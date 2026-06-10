@@ -21,7 +21,7 @@ Solution, four clean-architecture layers, Aspire orchestration, PostgreSQL via E
 
 ---
 
-## ▶️ 🧩 Stage 1 — The domain core: elevation substitution
+## ✅ 🧩 Stage 1 — The domain core: elevation substitution (complete)
 
 **Goal:** implement the game's signature rule as pure, well-tested domain logic.
 
@@ -43,10 +43,12 @@ no other layer changed.
 
 ---
 
-## ⬜ Stage 2 — Connect to Strava (OAuth)
+## ▶️ Stage 2 — Connect to Strava (OAuth)
 
 **Goal:** connect exactly one athlete and store refreshable tokens. *(Depends on: nothing in code; needs
 a Strava API application — create one at https://www.strava.com/settings/api.)*
+
+**Plan:** [plans/stage-2-strava-oauth.md](plans/stage-2-strava-oauth.md)
 
 **Work:**
 - **Domain:** `User` entity + owned `StravaConnection` value object (see [02](02-domain-model.md)).
@@ -69,6 +71,8 @@ build the bare refresh here and lean on it in Stage 3.
 ## ⬜ Stage 3 — Sync activities
 
 **Goal:** pull recent activities from Strava and store them, de-duplicated. *(Depends on: Stage 2.)*
+
+**Plan:** [plans/stage-3-sync-activities.md](plans/stage-3-sync-activities.md)
 
 **Work:**
 - **Domain:** `Activity` entity.

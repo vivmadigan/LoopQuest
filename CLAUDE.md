@@ -115,8 +115,8 @@ git switch dev && git merge --no-ff feature/stage-1-challenge-calculator
 git switch main && git merge --no-ff dev
 ```
 
-Trivial docs/config tweaks may go straight to `dev`. There's no GitHub remote yet — when we add one,
-feature branches become pull requests into `dev`.
+Trivial docs/config tweaks may go straight to `dev`. The repo lives on GitHub (`origin`); feature
+branches are opened as **pull requests into `dev`** and merged with a merge commit (PR #1 set the pattern).
 
 ## Definition of done for a change
 

@@ -90,8 +90,8 @@ These are tracked so they don't get forgotten:
   target version.)
 - **Aspire templates 13.1.0 → newer** — a newer Aspire project-template package exists
   (`dotnet new install Aspire.ProjectTemplates@<latest>`). Not urgent; our packages are already 13.4.2.
-- **Central Package Management** — intentionally deferred; consider adopting once the dependency set
-  settles (a `Directory.Packages.props` with `<PackageVersion>` entries).
+- **Central Package Management** — ✅ adopted: every package version is pinned centrally in the root
+  `Directory.Packages.props`; csproj files reference packages by name only (no inline `Version`).
 
 ## Useful conventions reminder
 
