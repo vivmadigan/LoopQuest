@@ -3,15 +3,7 @@ using LoopQuest.Domain.Challenges;
 namespace LoopQuest.Domain.Tests;
 
 /// <summary>
-/// STAGE 1 EXERCISE.
-///
-/// These tests encode the authoritative game rules (spec section 2.5 and the worked examples). They are
-/// all marked <c>Skip</c> so the suite stays green until you implement
-/// <see cref="ChallengeCalculator.Calculate"/>. Work one test at a time:
-///   1. Remove the Skip from a test.
-///   2. Run it (red).
-///   3. Implement just enough in ChallengeCalculator to make it green.
-///   4. Repeat. When all pass, the substitution logic is done.
+/// These tests encode the authoritative game rules (spec section 2.5 and the worked examples).
 /// </summary>
 public class ChallengeCalculatorTests
 {

@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/LoopQuest.Api/LoopQuest.Api.csproj" />
     <Project Path="src/LoopQuest.AppHost/LoopQuest.AppHost.csproj" />
