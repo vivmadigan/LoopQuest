@@ -1,3 +1,5 @@
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 namespace LoopQuest.Domain.Challenges;
 
 /// <summary>
@@ -83,9 +85,25 @@ public static class ChallengeCalculator
     /// </remarks>
     public static ChallengeProgress Calculate(ChallengeProgressInput input)
     {
-        // TODO(you): implement per the algorithm above and the tests, then delete this throw.
-        throw new NotImplementedException(
-            "ChallengeCalculator.Calculate is your Stage 1 exercise. " +
-            "See docs/03-roadmap.md and the skipped tests in ChallengeCalculatorTests.cs.");
+        double surplusDistance = Math.Max(0, input.AchievedDistanceMeters - input.TargetDistanceMeters);
+        double elevationAffordable = surplusDistance / SubstitutionRateMetersPerMeter;
+        double maxBuyableElevation = input.TargetElevationMeters * MaxBuyableFraction;
+        double elevationPurchased = Math.Min(elevationAffordable, maxBuyableElevation);
+        double effectiveElevation = input.AchievedElevationMeters + elevationPurchased;
+
+        bool distanceComplete = input.AchievedDistanceMeters >= input.TargetDistanceMeters;
+        bool elevationComplete = effectiveElevation >= input.TargetElevationMeters;
+
+        bool challengeComplete = distanceComplete && elevationComplete;
+
+        return new ChallengeProgress(
+            SurplusDistanceMeters: surplusDistance,
+            ElevationPurchasedMeters: elevationPurchased,
+            EffectiveElevationMeters: effectiveElevation,
+            DistanceComplete: distanceComplete,
+            ElevationComplete: elevationComplete,
+            ChallengeComplete: challengeComplete
+            );
+
     }
 }
