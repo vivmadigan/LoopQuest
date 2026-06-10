@@ -15,13 +15,10 @@ namespace LoopQuest.Domain.Tests;
 /// </summary>
 public class ChallengeCalculatorTests
 {
-    private const string SkipReason =
-        "Stage 1 exercise: implement ChallengeCalculator.Calculate, then remove this Skip.";
-
     // Doubles are compared to 2 decimal places throughout (everything is in meters).
     private const int Precision = 2;
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void BothTargetsMetByRealEffort_IsComplete()
     {
         var result = ChallengeCalculator.Calculate(new ChallengeProgressInput(
@@ -36,7 +33,7 @@ public class ChallengeCalculatorTests
         Assert.Equal(0, result.ElevationPurchasedMeters, Precision);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void SurplusDistance_BuysElevationUpToTheCap_CompletingAnAlpineLoop()
     {
         // 50 km / 3000 m. Max buyable = 3000 / 3 = 1000 m, which needs 1000 * 30 = 30 km of surplus.
@@ -52,7 +49,7 @@ public class ChallengeCalculatorTests
         Assert.True(result.ChallengeComplete);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void CapPreventsAFlatWeekFromCompletingAVerticalLoop()
     {
         // Enormous flat distance can still only buy 1/3 of the required elevation.
@@ -68,7 +65,7 @@ public class ChallengeCalculatorTests
         Assert.False(result.ChallengeComplete);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void ExtraElevation_NeverBuysDistance()
     {
         // Substitution is one-directional. Tons of climbing but short on distance => not complete.
@@ -83,7 +80,7 @@ public class ChallengeCalculatorTests
         Assert.Equal(0, result.ElevationPurchasedMeters, Precision);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void ExchangeRateAndCap_MeetAtTheBoundary()
     {
         // Target 10 km / 900 m. Cap = 900 / 3 = 300 m. To buy 300 m needs 300 * 30 = 9 km surplus.
@@ -99,7 +96,7 @@ public class ChallengeCalculatorTests
         Assert.True(result.ChallengeComplete);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void JustShortOnEffectiveElevation_IsNotComplete()
     {
         var result = ChallengeCalculator.Calculate(new ChallengeProgressInput(
