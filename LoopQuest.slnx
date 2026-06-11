@@ -14,5 +14,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/LoopQuest.Api.IntegrationTests/LoopQuest.Api.IntegrationTests.csproj" />
     <Project Path="tests/LoopQuest.Domain.Tests/LoopQuest.Domain.Tests.csproj" />
+    <Project Path="tests/LoopQuest.Infrastructure.Tests/LoopQuest.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

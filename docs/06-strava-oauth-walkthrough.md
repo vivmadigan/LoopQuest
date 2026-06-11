@@ -48,6 +48,28 @@ that's what "idempotent" means here.
 | `expires_at` | The working key's death clock (epoch seconds on the wire → `DateTimeOffset` in our code) | token response | n/a |
 | athlete id | Strava's permanent number for you — our lookup key for the user row | token response | forever |
 
+### The trade ledger — what crosses the wire, when
+
+| Moment | We hand Strava | Strava hands back |
+|--------|----------------|-------------------|
+| **Permission page** (browser, steps 2–3) | `client_id`, `redirect_uri`, `response_type=code`, `scope` — no secrets, just "who's asking, for what" | after you authorize: `code` + `scope` on the callback URL |
+| **The trade** (server, step 6) | `client_id` + `client_secret` + `code` + `grant_type=authorization_code` | `access_token`, `refresh_token`, `expires_at`, + athlete info (id, name) |
+| **Refresh** (server, Stage 3) | `client_id` + `client_secret` + `refresh_token` + `grant_type=refresh_token` | *new* `access_token`, *new* `refresh_token`, `expires_at` — no athlete |
+| **Reading data** (Stage 3) | just the `access_token`, in a header: `Authorization: Bearer <token>` | your activities as JSON |
+
+Three things this table is quietly teaching:
+
+1. **Once set up, data calls need exactly one thing** — the access token in a header. Everything
+   else (`client_secret`, `code`, `refresh_token`) exists only to obtain and renew that one key.
+2. **A refresh is a swap, not a withdrawal** — you spend the refresh token and receive a new one
+   alongside the fresh access token. Store both, every time, or the next refresh fails.
+3. **`client_secret` appears only in server-to-server rows** — never in a browser URL, never in
+   git, never in a log.
+
+And the other direction of "give": nothing. We never push LoopQuest data to Strava — the
+relationship is read-only. The only things Strava ever learns from us are which app is asking and
+proof we're allowed to.
+
 ## 4. The files, layer by layer
 
 ### Domain — the rules, no frameworks ✅

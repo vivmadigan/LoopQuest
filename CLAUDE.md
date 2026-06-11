@@ -68,12 +68,14 @@ dotnet run --project src/LoopQuest.AppHost            # run everything via Aspir
 dotnet test                                           # all tests (integration tests need Docker)
 dotnet test tests/LoopQuest.Domain.Tests              # fast unit tests only
 
-# New migration (Infrastructure is its own startup, via the design-time factory):
-dotnet ef migrations add <Name> \
-  --project src/LoopQuest.Infrastructure \
-  --startup-project src/LoopQuest.Infrastructure \
-  --output-dir Persistence/Migrations
+# New migration (Infrastructure is its own startup, via the design-time factory).
+# ONE line on purpose — the owner's shell is PowerShell, which rejects bash `\` continuations:
+dotnet ef migrations add <Name> --project src/LoopQuest.Infrastructure --startup-project src/LoopQuest.Infrastructure --output-dir Persistence/Migrations
 ```
+
+**The owner always runs migration commands personally** (explicit preference, 2026-06-11). Claude:
+review the entity/configuration code before they generate, hand them the exact command, and review
+the generated migration together afterwards — never execute `dotnet ef` yourself.
 
 The API migrates + seeds on startup (`DatabaseInitializer`). That's a deliberate MVP shortcut;
 moving migration to a dedicated step is a roadmap item.

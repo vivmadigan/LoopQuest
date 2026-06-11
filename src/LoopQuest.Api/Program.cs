@@ -1,7 +1,9 @@
 using LoopQuest.Api.Common;
 using LoopQuest.Application;
+using LoopQuest.Application.Common.Interfaces;
 using LoopQuest.Infrastructure;
 using LoopQuest.Infrastructure.Persistence;
+using LoopQuest.Infrastructure.Strava;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

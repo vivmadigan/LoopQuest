@@ -1,5 +1,6 @@
 using LoopQuest.Application.Common.Interfaces;
 using LoopQuest.Infrastructure.Persistence;
+using LoopQuest.Infrastructure.Strava;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -24,5 +25,13 @@ public static class DependencyInjection
 
         // Let the Application layer resolve the same context through its abstraction.
         builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+        builder.Services.Configure<StravaOptions>(
+        builder.Configuration.GetSection(StravaOptions.SectionName));
+
+        builder.Services.AddHttpClient<IStravaClient, StravaClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://www.strava.com");
+        });
     }
 }
