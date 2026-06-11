@@ -12,6 +12,7 @@ namespace LoopQuest.Application.Common.Interfaces;
 public interface IAppDbContext
 {
     DbSet<Loop> Loops { get; }
+    DbSet<User> Users { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

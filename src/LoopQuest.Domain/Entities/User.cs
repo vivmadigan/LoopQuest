@@ -2,6 +2,10 @@ using LoopQuest.Domain.ValueObjects;
 
 namespace LoopQuest.Domain.Entities;
 
+/// <summary>
+/// An athlete playing LoopQuest, identified by their Strava athlete id. Once they approve the app
+/// on Strava, their API tokens live here too (Connection — stays null until the first connect).
+/// </summary>
 public class User
 {
     private User() { }                                // EF
@@ -36,6 +40,8 @@ public class User
         };
     }
 
+    /// <summary>Stores (or replaces) the Strava tokens — serves the first connect, reconnects, and
+    /// later token refreshes alike, which is what keeps reconnecting idempotent.</summary>
     public void ConnectStrava(string accessToken, string refreshToken,
         DateTimeOffset expiresAt, string scope)
     {

@@ -4,7 +4,11 @@ using System.Text;
 
 namespace LoopQuest.Domain.ValueObjects;
 
-// Domain/ValueObjects/StravaConnection.cs
+/// <summary>
+/// A user's stored Strava API keys: AccessToken (the key — dies after ~6h), RefreshToken (used to
+/// get fresh keys), ExpiresAt (when the key dies), Scope (what we're allowed to read). It has no
+/// table of its own — EF saves these as extra columns inside the users table (an "owned" type).
+/// </summary>
 public class StravaConnection
 {
     private StravaConnection() { }                    // EF
