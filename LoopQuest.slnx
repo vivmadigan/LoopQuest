@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/LoopQuest.Api/LoopQuest.Api.csproj" />
     <Project Path="src/LoopQuest.AppHost/LoopQuest.AppHost.csproj" />
@@ -10,5 +14,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/LoopQuest.Api.IntegrationTests/LoopQuest.Api.IntegrationTests.csproj" />
     <Project Path="tests/LoopQuest.Domain.Tests/LoopQuest.Domain.Tests.csproj" />
+    <Project Path="tests/LoopQuest.Infrastructure.Tests/LoopQuest.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

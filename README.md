@@ -110,12 +110,16 @@ dotnet test
 # Run only the fast unit tests
 dotnet test tests/LoopQuest.Domain.Tests
 
-# Add a new EF Core migration (Infrastructure is its own startup via the design-time factory)
-dotnet ef migrations add <Name> \
-  --project src/LoopQuest.Infrastructure \
-  --startup-project src/LoopQuest.Infrastructure \
-  --output-dir Persistence/Migrations
+# Add a new EF Core migration (Infrastructure is its own startup via the design-time factory).
+# Kept on ONE line on purpose — bash `\` line-continuations break in PowerShell.
+dotnet ef migrations add <Name> --project src/LoopQuest.Infrastructure --startup-project src/LoopQuest.Infrastructure --output-dir Persistence/Migrations
+
+# If `dotnet-ef` isn't found, restore the repo's local tools once:
+dotnet tool restore
 ```
+
+Migrations are **applied automatically** when the API starts (`DatabaseInitializer`) — generating
+the migration is the manual step; running it against the database is not.
 
 ---
 

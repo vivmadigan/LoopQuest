@@ -56,6 +56,12 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
   </ItemGroup>
 
+  <!-- Infrastructure: Strava typed HttpClient + options binding -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.8" />
+  </ItemGroup>
+
   <!-- Test tooling -->
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />

@@ -2,8 +2,18 @@
 
 > **How to use this doc:** work top to bottom. Every task is tagged:
 > **🧩 you write it** · **📖 reference example — type it, adapt it, understand it** · **🤝 we do it together in chat**.
-> Drafted by Claude (2026-06-10) for Viv's review. This plan assumes Stage 2 was built per its plan
-> (`IStravaClient`, `StravaClient`, `User`/`StravaConnection`) — if Stage 2 drifted, we update this doc first.
+> Drafted by Claude (2026-06-10); reworked 2026-06-11 with what building Stage 2 together taught us.
+> This plan assumes Stage 2 was built per its plan (`IStravaClient`, `StravaClient`,
+> `User`/`StravaConnection`) — if Stage 2 drifted, we update this doc first.
+>
+> **Two words that bit us once:** a *Stage* is a roadmap chapter (this doc is Stage 3); a *Step* is
+> a numbered task inside it. Say which one you mean in chat and nobody gets lost.
+>
+> **When a step feels foggy**, the rescue order is: ① that step's *"what you're actually doing"*
+> list ② its *"questions you'll probably ask"* ③ the [OAuth walkthrough](../06-strava-oauth-walkthrough.md)
+> (vocabulary + trade ledger) ④ ask Claude *"what do I actually type?"* — a normal question, not a
+> failure. And keep writing plain-language comments as you go: `///` docs on interfaces, `//` notes
+> in implementations.
 >
 > **Start only after Stage 2 is merged to `dev`.** Then: `git switch dev && git switch -c feature/stage-3-sync-activities`
 
@@ -29,6 +39,13 @@ SyncActivitiesCommand handler (Application)
 SyncResultDto { fetched, qualifying, added, updated }   ← makes idempotency *visible*
 ```
 
+**Why this stage matters:** everything until now was *getting permission*. This stage finally
+**spends the access token** — the "reading data" row of your
+[trade ledger](../06-strava-oauth-walkthrough.md) (`Authorization: Bearer <token>` → activities
+JSON). When it's done, real runs sit in your database, and Stages 4–6 turn them into the game.
+The numbered lines in the diagram above are the same numbered beats as the handler recipe in
+Step 2 — one picture, one recipe, same numbers.
+
 ### The three complexities of this stage, in plain words
 
 1. **Pagination.** Strava won't hand you everything at once — you ask for page 1, then page 2, …
@@ -41,15 +58,18 @@ SyncResultDto { fetched, qualifying, added, updated }   ← makes idempotency *v
    must update what changed (renamed run, corrected elevation) and add what's new — never duplicate.
    The unique index on `StravaActivityId` is the database-level backstop if our logic slips.
 
-### New concepts in this stage
+### New words in this stage (vocabulary first, like the ledger)
 
-| Concept | One-liner |
-|---|---|
-| Pagination loop | Fetch page after page until a short page says "that's all". |
-| Per-request bearer auth | Build an `HttpRequestMessage`, set its `Authorization` header — the token varies per call, so it can't live in DI config. |
-| Idempotency | Running the same command twice leaves the same end state. |
-| Hand-rolled fakes | A test class implementing `IStravaClient` yourself — no mocking library needed. |
-| SQLite in-memory DB | Run real EF queries against a throwaway database living in RAM — perfect for handler tests. |
+| Word | What it actually is | You'll meet it in |
+|---|---|---|
+| Pagination | Strava hands long lists out in pages: ask for page 1, 2, 3… until a *short* page says "that's all" | Step 3's loop |
+| Bearer header | `Authorization: Bearer <access token>` — the working key riding on a data request | Step 3's `HttpRequestMessage` |
+| Idempotency | Running the same command twice leaves the same end state — sync twice, zero duplicates | the whole stage; proven in Step 7 |
+| Upsert | update-or-insert: "seen this `StravaActivityId` before? update that row : add a new one" | Step 2, beat 6 |
+| N+1 | the classic mistake of one DB query *per item* in a loop; we load all matches in ONE query instead | Step 2's dictionary pattern |
+| Epoch seconds | dates as "seconds since 1970". Stage 2 *read* one (`FromUnixTimeSeconds`); now you *write* one (`ToUnixTimeSeconds`) for Strava's `after` param | Step 3's URL |
+| Hand-rolled fake | a tiny class implementing `IStravaClient` so tests control what "Strava" returns — `FakeHttpMessageHandler`'s trick, one layer up | Step 5 |
+| SQLite in-memory | a real database living in RAM, gone when its connection closes — handler tests run real EF SQL with no Docker | Step 5's `TestDb` |
 
 ---
 
@@ -126,11 +146,27 @@ straight through the validation pipeline.
 
 ### Step 1 — Domain: `Activity` + three small additions 🧩
 
-**`Activity`** mirrors the entity pattern you now know: private parameterless ctor, private setters,
-`Create(...)` with guards (`stravaActivityId > 0`, `userId` not empty, distance/elevation ≥ 0,
-name trimmed). Fields per [02-domain-model.md](../02-domain-model.md): `Id`, `UserId`,
-`StravaActivityId`, `Name`, `SportType`, `StartDateLocal` (DateTimeOffset), `DistanceMeters`,
-`ElevationGainMeters`, `IngestedAt`. One *new* wrinkle — a mutator for re-sync:
+**What you're actually doing:** ① create `Entities/Activity.cs` ② create
+`Activities/QualifyingSportTypes.cs` (📖 below) ③ add one method to `StravaConnection`
+④ add one method to `User` ⑤ write the tests ⑥ run them. All Domain — no HTTP, no DB, no DI.
+
+**`Activity`** follows the entity pattern you've now built twice (`Loop`, `User`): private
+parameterless ctor for EF, private setters, static `Create(...)` with guards
+(`stravaActivityId > 0`, `userId` not empty, distance/elevation ≥ 0, name trimmed).
+Where every property's value will come from — keep this table beside you while writing `Create`:
+
+| `Activity` property | Filled from | Notes |
+|---|---|---|
+| `Id` (Guid) | `Guid.NewGuid()` inside `Create` | our own key, same as `User.Id` |
+| `UserId` | the synced user's `Id` | whose run this is (FK in Step 4) |
+| `StravaActivityId` | Strava's `id` | the upsert lookup key — unique index in Step 4 |
+| `Name` | Strava's `name` | trimmed |
+| `SportType` | Strava's `sport_type` | plain string; checked against the allowlist *before* `Create` is ever called |
+| `StartDateLocal` | Strava's `start_date_local` | stored **as-is**, no timezone math — see pitfall #1's fake `Z` |
+| `DistanceMeters`, `ElevationGainMeters` | `distance`, `total_elevation_gain` | already meters (house rule: meters everywhere, convert only at display) |
+| `IngestedAt` | `DateTimeOffset.UtcNow` inside `Create` | when *we* stored it — not when you ran |
+
+One *new* wrinkle — a mutator for re-sync:
 
 ```csharp
 public void UpdateFromSync(string name, string sportType, DateTimeOffset startDateLocal,
@@ -159,6 +195,17 @@ boundary cases unit-testable. Never bury `DateTimeOffset.UtcNow` deep inside dom
 **On `User`** (🧩): `RefreshTokens(accessToken, refreshToken, expiresAt)` — like `ConnectStrava`
 but it must **keep the existing `Scope`** (refresh responses don't include one).
 
+**Questions you'll probably ask in this step:**
+
+- *"Why both `Create` and `UpdateFromSync`?"* — `Create` is for an activity we've never seen
+  (becomes an INSERT); `UpdateFromSync` mutates one EF is already tracking (becomes an UPDATE via
+  the same snapshot change-detection that caught `ConnectStrava` in Stage 2). Two different beats
+  of the upsert.
+- *"Is `IngestedAt` from Strava?"* — no, it's ours: the moment the row was written. Strava knows
+  when you ran (`StartDateLocal`); we know when we copied it.
+- *"Why does `IsExpiredOrExpiringWithin` take `now` as a parameter?"* — so tests can pin the clock.
+  A buried `DateTimeOffset.UtcNow` cannot be tested at the boundary; a passed-in `now` can.
+
 **Tests first**, suggested names:
 `Create_RejectsNonPositiveStravaActivityId` · `Create_RejectsNegativeDistance` ·
 `UpdateFromSync_ReplacesTheSyncedFields` · `IsExpiredOrExpiringWithin_TrueWhenInsideBuffer` ·
@@ -167,6 +214,14 @@ but it must **keep the existing `Scope`** (refresh responses don't include one).
 **Checkpoint:** `dotnet test tests/LoopQuest.Domain.Tests` green.
 
 ### Step 2 — Application: the contract grows, and the centrepiece handler
+
+Same two roles as every slice: the command is the **message** (no data on it this time — which is
+exactly why there's **no validator**: nothing to check), the handler is the **worker**. Its two
+constructor ingredients are old friends, `IAppDbContext` and `IStravaClient` — DI supplies both,
+same as Stage 2's handlers.
+
+**Write order (so each compile error points at the next file):** ① the `IStravaClient` addition
+② `DbSet<Activity>` on `IAppDbContext` ③ `SyncResultDto` ④ the command ⑤ the handler.
 
 Addition to `IStravaClient` (📖 — anchors everything):
 
@@ -224,6 +279,19 @@ Add `DbSet<Activity> Activities { get; }` to `IAppDbContext`.
    dictionary lookup per activity — instead of one query *per activity* (the classic "N+1" mistake).
 7. `SaveChangesAsync`, return the counts (`Updated` = matches found; precise enough for v1).
 
+**Questions you'll probably ask in this step:**
+
+- *"Where does the access token come from?"* — `user.Connection.AccessToken`, loaded from the DB in
+  beat 1 (and possibly *replaced* in beat 2 — which is why beat 4 must read `user.Connection`
+  again, pitfall #3).
+- *"Is `GetActivitiesAsync` reading the DB?"* — no. It's HTTP to Strava, through the interface.
+  The database appears only in beats 1, 2 (the immediate save), 6 and 7.
+- *"Why does this handler save twice?"* — beat 2's save protects the rotated refresh token even if
+  the fetch crashes a millisecond later; beat 7's save writes the activities. Different jobs.
+- *"What's `ToDictionaryAsync` for?"* — one SQL query fetches every already-known activity
+  (`Contains` → SQL `IN`), then lookups are free, in memory. The alternative — querying inside the
+  `foreach` — is the N+1 mistake from the vocabulary table.
+
 **Checkpoint:** `dotnet build` clean.
 
 ### Step 3 — Infrastructure: the paged, authenticated call 📖
@@ -279,6 +347,18 @@ private sealed record ActivityResponse(
 Stare at the stop condition until you believe it: a full page (= exactly 200) *might* mean more
 pages, so we loop again; a short page can't. Worst case we make one extra request when the total is
 an exact multiple of 200 — correct beats clever.
+
+**Questions you'll probably ask in this step:**
+
+- *"Why `HttpRequestMessage` instead of just `http.GetAsync(url)`?"* — because this call needs a
+  per-request header. The token differs per user and per refresh, so it can't be baked into the
+  client at registration like `BaseAddress` was; you build the envelope yourself and stamp
+  `Authorization: Bearer …` on it. (`GetAsync` is just `SendAsync` with no chance to add headers.)
+- *"Is this like `BuildAuthorizationUrl`?"* — opposite end of the spectrum: that method does *no*
+  HTTP; this one does the most in the app. Both build URLs from parts, though — same string skills.
+- *"`ActivityResponse` vs `StravaActivitySummary` — why two?"* — the same two-dialects rule as
+  Stage 2's `TokenResponse`: snake_case wire shape stays private to this file; the clean record is
+  what Application sees. Strava renames a field → one file changes.
 
 **Checkpoint:** `dotnet build` clean.
 
@@ -498,6 +578,10 @@ it over this doc if they disagree.
 
 ## 7. Pitfalls (each is a real bug waiting)
 
+> None of these are compile errors. Every one **builds clean and lies at runtime** — the
+> `DateTimeOffset.Now`-in-`ConnectStrava` class of bug you met in Stage 2. The compiler checks
+> types, never meaning. Read this list before Step 2, and again before Step 7.
+
 1. **`start_date_local` lies about its `Z`.** Strava marks it UTC (`…T07:30:00Z`) but the clock
    digits are *local wall time* (the 05:30 UTC run above started at 07:30 in Stockholm). For us
    this is exactly right — week bucketing uses wall-clock local time — so store it as-is and do
@@ -524,6 +608,7 @@ it over this doc if they disagree.
 - [ ] **Second `POST /api/sync` returns `added: 0` and the row count is unchanged**
 - [ ] Migration has the unique index on `StravaActivityId` and the FK to `users`
 - [ ] Application gained no new package references; dependency rule intact
+- [ ] New code carries the plain-language comments future-you needs (`///` on interfaces, `//` in implementations)
 - [ ] Reviewed, then merged: `git switch dev && git merge --no-ff feature/stage-3-sync-activities`
 
 ## 9. Explicitly out of scope (resist the urge)
