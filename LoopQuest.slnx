@@ -1,4 +1,16 @@
 <Solution>
+  <Folder Name="/docs/">
+    <File Path="docs/00-vision-and-scope.md" />
+    <File Path="docs/01-architecture.md" />
+    <File Path="docs/02-domain-model.md" />
+    <File Path="docs/03-roadmap.md" />
+    <File Path="docs/04-strava-integration.md" />
+    <File Path="docs/05-local-dev-setup.md" />
+    <File Path="docs/06-strava-oauth-walkthrough.md" />
+    <File Path="docs/plans/stage-2-strava-oauth.md" />
+    <File Path="docs/plans/stage-3-sync-activities.md" />
+    <File Path="docs/plans/stage-4-select-challenge.md" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />

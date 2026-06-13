@@ -95,6 +95,8 @@ test if you mock Strava.
 **Goal:** turn a chosen loop into an active `WeeklyChallenge` for the current week. *(Depends on: loop
 library ✅; week math.)*
 
+**Plan:** [plans/stage-4-select-challenge.md](plans/stage-4-select-challenge.md)
+
 **Work:**
 - **Domain:** `WeeklyChallenge` entity; a small `Week` helper (Mon–Sun boundaries from a date + timezone).
   **Snapshot** the loop's targets onto the challenge at selection.
