@@ -34,7 +34,7 @@ public class Activity
          double distanceMeters,
          double elevationGainMeters)
     {
-
+        Validate(distanceMeters, elevationGainMeters);
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("User ID cannot be empty.", nameof(userId));
@@ -45,14 +45,6 @@ public class Activity
             throw new ArgumentException("Strava Activity ID must be a positive integer.", nameof(stravaActivityId));
         }
 
-        if (distanceMeters < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(distanceMeters), distanceMeters, "Distance cannot be negative.");
-        }
-        if (elevationGainMeters < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(elevationGainMeters), elevationGainMeters, "Elevation gain cannot be negative.");
-        }
 
         return new Activity
         {
@@ -68,5 +60,27 @@ public class Activity
         };
 
     }
+    public void UpdateFromSync(string name, string sportType, DateTimeOffset startDateLocal,
+       double distanceMeters, double elevationGainMeters)
+    {
+        // validate, then assign to THIS object's properties
+        Validate(distanceMeters, elevationGainMeters);
+        Name = name.Trim();
+        SportType = sportType.Trim();
+        StartDateLocal = startDateLocal;
+        DistanceMeters = distanceMeters;
+        ElevationGainMeters = elevationGainMeters;
+    }
 
+    private static void Validate(double distanceMeters, double elevationGainMeters)
+    {
+        if (distanceMeters < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(distanceMeters), distanceMeters, "Distance cannot be negative.");
+        }
+        if (elevationGainMeters < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(elevationGainMeters), elevationGainMeters, "Elevation gain cannot be negative.");
+        }
+    }
 }

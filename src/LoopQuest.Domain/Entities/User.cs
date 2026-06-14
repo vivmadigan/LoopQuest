@@ -47,4 +47,18 @@ public class User
     {
         Connection = StravaConnection.Create(accessToken, refreshToken, expiresAt, scope);
     }
+
+    /// <summary>Replaces only the tokens after a refresh, keeping the existing
+    /// <see cref="StravaConnection.Scope"/> — Strava's refresh responses don't return a scope, so we
+    /// carry the one from the original connect forward. Must already be connected.</summary>
+    public void RefreshTokens(string accessToken, string refreshToken, DateTimeOffset expiresAt)
+    {
+        if (Connection is null)
+        {
+            throw new InvalidOperationException("Cannot refresh tokens before connecting.");
+        }
+
+        // Connection.Scope is read here (on the right-hand side) before the new connection replaces it.
+        Connection = StravaConnection.Create(accessToken, refreshToken, expiresAt, Connection.Scope);
+    }
 }
