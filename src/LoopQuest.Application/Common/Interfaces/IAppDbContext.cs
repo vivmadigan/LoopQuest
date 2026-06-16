@@ -13,6 +13,7 @@ public interface IAppDbContext
 {
     DbSet<Loop> Loops { get; }
     DbSet<User> Users { get; }
+    DbSet<Activity> Activities { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

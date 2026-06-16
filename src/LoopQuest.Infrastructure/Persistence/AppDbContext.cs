@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<Loop> Loops => Set<Loop>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<Activity> Activities => Set<Activity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

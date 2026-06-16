@@ -20,6 +20,11 @@ public interface IStravaClient
     /// <summary>Access tokens die after ~6h; this swaps the refresh token for fresh ones (used from Stage 3).
     /// Strava ROTATES refresh tokens — always store the new one.</summary>
     Task<StravaTokens> RefreshAsync(string refreshToken, CancellationToken cancellationToken);
+
+    /// <summary>All activities starting after <paramref name="after"/>, newest pages fetched until
+    /// exhausted. Paging is handled inside the implementation.</summary>
+    Task<IReadOnlyList<StravaActivitySummary>> GetActivitiesAsync(
+        string accessToken, DateTimeOffset after, CancellationToken cancellationToken);
 }
 
 /// <summary>The three values we must store to call Strava later: the key, the key-renewer, and when the key dies.</summary>
@@ -28,3 +33,6 @@ public sealed record StravaTokens(string AccessToken, string RefreshToken, DateT
 /// <summary>What a successful first connect returns: who the athlete is, plus their tokens. (A refresh
 /// returns only tokens — that's why there are two records instead of one with empty holes.)</summary>
 public sealed record StravaAuthorization(long AthleteId, string AthleteDisplayName, StravaTokens Tokens);
+
+public sealed record StravaActivitySummary(long Id, string Name, string SportType, DateTimeOffset StartDateLocal,
+    double DistanceMeters, double ElevationGainMeters);
