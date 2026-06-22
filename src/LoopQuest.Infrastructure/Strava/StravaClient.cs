@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using LoopQuest.Application.Common.Interfaces;
@@ -12,6 +13,9 @@ public sealed class StravaClient(HttpClient http, IOptions<StravaOptions> option
 {
     // .Value unwraps the bound "Strava" config section (user-secrets + appsettings).
     private readonly StravaOptions _options = options.Value;
+
+    // Strava's maximum per_page
+    private const int PageSize = 200;
 
     // The one method on this client that never calls Strava — no HTTP, it only manufactures
     // the URL the user's browser will visit.
@@ -86,6 +90,42 @@ public sealed class StravaClient(HttpClient http, IOptions<StravaOptions> option
             DateTimeOffset.FromUnixTimeSeconds(payload.ExpiresAt));
     }
 
+    // The "reading data" row of the ledger: spend the access token to pull activities. Strava hands
+    // long lists out in pages, so we loop — page 1, 2, 3… — until a short page says "that's all".
+    public async Task<IReadOnlyList<StravaActivitySummary>> GetActivitiesAsync(
+    string accessToken, DateTimeOffset after, CancellationToken cancellationToken)
+    {
+        var results = new List<StravaActivitySummary>();
+
+        for (var page = 1; ; page++)
+        {
+            var url = $"/api/v3/athlete/activities" +
+                      $"?after={after.ToUnixTimeSeconds()}&page={page}&per_page={PageSize}";
+
+            // Unlike the OAuth POSTs, this call needs a per-request token, so we build the request
+            // ourselves and stamp Authorization: Bearer <token> on it (GetAsync has nowhere for headers).
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await http.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var batch = await response.Content
+                .ReadFromJsonAsync<List<ActivityResponse>>(cancellationToken) ?? [];
+
+            // Map each snake_case wire row (ActivityResponse) to the clean summary the rest of the app sees.
+            results.AddRange(batch.Select(a => new StravaActivitySummary(
+                a.Id, a.Name, a.SportType, a.StartDateLocal, a.Distance, a.TotalElevationGain)));
+
+            if (batch.Count < PageSize)
+            {
+                break;   // a short (or empty) page means we've reached the end
+            }
+        }
+
+        return results;
+    }
+
     // Strava's wire shape, private to this file — nothing outside Infrastructure may know it.
     // [property: JsonPropertyName("access_token")] is a name tag: "in the JSON, I'm called
     // access_token" — how Strava's snake_case lands in our PascalCase properties. Athlete is
@@ -100,4 +140,12 @@ public sealed class StravaClient(HttpClient http, IOptions<StravaOptions> option
         [property: JsonPropertyName("id")] long Id,
         [property: JsonPropertyName("firstname")] string FirstName,
         [property: JsonPropertyName("lastname")] string LastName);
+
+    private sealed record ActivityResponse(
+        [property: JsonPropertyName("id")] long Id,
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("sport_type")] string SportType,
+        [property: JsonPropertyName("start_date_local")] DateTimeOffset StartDateLocal,
+        [property: JsonPropertyName("distance")] double Distance,
+        [property: JsonPropertyName("total_elevation_gain")] double TotalElevationGain);
 }

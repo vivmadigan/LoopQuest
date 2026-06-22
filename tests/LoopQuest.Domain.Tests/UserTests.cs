@@ -60,4 +60,26 @@ public class UserTests
         Assert.Equal("new-refresh", user.Connection.RefreshToken);
         Assert.Equal("activity:read_all", user.Connection.Scope);
     }
+
+    [Fact]
+    public void RefreshTokens_KeepsTheExistingScope()
+    {
+        var user = User.Create(123, "Viv");
+        user.ConnectStrava("old-access", "old-refresh", DateTimeOffset.UtcNow.AddMinutes(1), "activity:read_all");
+
+        user.RefreshTokens("new-access", "new-refresh", DateTimeOffset.UtcNow.AddHours(6));
+
+        Assert.Equal("new-access", user.Connection!.AccessToken);   // tokens rotated
+        Assert.Equal("new-refresh", user.Connection.RefreshToken);
+        Assert.Equal("activity:read_all", user.Connection.Scope);   // ...but scope carried forward
+    }
+
+    [Fact]
+    public void RefreshTokens_ThrowsWhenNotConnected()
+    {
+        var user = User.Create(123, "Viv");   // never connected — Connection is null
+
+        Assert.Throws<InvalidOperationException>(
+            () => user.RefreshTokens("access", "refresh", DateTimeOffset.UtcNow.AddHours(6)));
+    }
 }

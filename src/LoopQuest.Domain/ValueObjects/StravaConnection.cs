@@ -38,4 +38,13 @@ public class StravaConnection
             Scope = scope,
         };
     }
+
+    /// <summary>
+    /// True if the access token is already expired or will expire within <paramref name="buffer"/> of
+    /// <paramref name="now"/>. The handler checks this before each Strava request and refreshes when it
+    /// returns true, so a token that's seconds from dying is never sent. <paramref name="now"/> is a
+    /// parameter (not read from the clock) so the boundary cases stay unit-testable.
+    /// </summary>
+    public bool IsExpiredOrExpiringWithin(TimeSpan buffer, DateTimeOffset now)
+        => ExpiresAt <= now + buffer;
 }

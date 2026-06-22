@@ -1,27 +1,36 @@
 namespace LoopQuest.Infrastructure.Tests.Strava;
 
 /// <summary>
-/// A stand-in for HttpClient's real engine. HttpClient sends nothing itself — every request goes
-/// through its HttpMessageHandler, and that engine is swappable: new HttpClient(handler). This fake
-/// answers every request with one canned response and records what was asked, so tests can assert
-/// on both sides of the conversation. No network is ever touched.
+/// A fake HttpMessageHandler for tests. HttpClient never touches the network itself — it hands every
+/// request to its HttpMessageHandler, and that part is swappable: new HttpClient(handler). This fake
+/// returns responses you pre-load, one per request in the order given, and records every request it
+/// receives so tests can assert on what was sent. No network is ever touched.
 /// </summary>
-public sealed class FakeHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
+public sealed class FakeHttpMessageHandler(params HttpResponseMessage[] responses) : HttpMessageHandler
 {
-    // The "spy" half: what the code under test asked for, kept for the test's asserts.
-    public HttpRequestMessage? LastRequest { get; private set; }
-    public string? LastRequestBody { get; private set; }
+    // The responses to hand back, in order: the first one passed answers the first request, and so on.
+    private readonly Queue<HttpResponseMessage> _responses = new(responses);
 
-    // Protected because only the HttpClient machinery calls it — every request the client
-    // makes lands here instead of the internet.
+    // Every request (and its body) that came through, kept so tests can check what was sent —
+    // for example, that a paging loop made exactly two requests.
+    public List<HttpRequestMessage> Requests { get; } = [];
+    public List<string?> RequestBodies { get; } = [];
+
+    // Shortcuts to the most recent request, so the older single-request tests stay simple.
+    public HttpRequestMessage? LastRequest => Requests.Count > 0 ? Requests[^1] : null;
+    public string? LastRequestBody => RequestBodies.Count > 0 ? RequestBodies[^1] : null;
+
+    // Protected because only the HttpClient machinery calls it — every request lands here, not online.
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        LastRequest = request;
-        // Read the body NOW: request content is a stream that can't reliably be read later.
-        LastRequestBody = request.Content is null
+        // Record the request, reading its body NOW: the content is a stream that can't be re-read later.
+        Requests.Add(request);
+        RequestBodies.Add(request.Content is null
             ? null
-            : await request.Content.ReadAsStringAsync(cancellationToken);
-        return response;
+            : await request.Content.ReadAsStringAsync(cancellationToken));
+
+        // Hand back the next queued response (throws if a test queued fewer responses than requests made).
+        return _responses.Dequeue();
     }
 }
